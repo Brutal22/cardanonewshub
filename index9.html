@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardano News Hub</title>
+    <script src="https://unpkg.com/rss-parser@3.13.0/dist/rss-parser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+        header {
+            background: #0f0f1a;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid #00d4ff;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            color: #00d4ff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .ticker {
+            background: #16213e;
+            padding: 10px 0;
+            overflow: hidden;
+            white-space: nowrap;
+            border-bottom: 1px solid #444;
+        }
+        .ticker span {
+            display: inline-block;
+            padding-left: 100%;
+            animation: scroll 60s linear infinite;
+            color: #ff007a;
+            font-weight: bold;
+            margin-right: 40px; /* Increased spacing for readability */
+        }
+        .highlighted {
+            color: #ffec3d;
+            font-weight: bold;
+            background-color: #333;
+            padding: 0 10px;
+        }
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+        .tabs {
+            max-width: 1200px;
+            margin: 10px auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-around;
+            background: #0f0f1a;
+            border-bottom: 1px solid #00d4ff;
+        }
+        .tabs a {
+            padding: 10px 20px;
+            color: #00d4ff;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .tabs a:hover {
+            background: #ff007a;
+            color: #e0e0e0;
+        }
+        .live-banner {
+            background: #ff007a;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .price-feed {
+            max-width: 1200px;
+            margin: 10px auto;
+            padding: 15px;
+            background: #0f0f1a;
+            color: #00d4ff;
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        .news-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+            display: grid;
+            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        }
+        .news-item {
+            background: #0f0f1a;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .news-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
+        }
+        .news-item h2 {
+            margin: 0 0 10px;
+            font-size: 1.2em;
+        }
+        .news-item h2 a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+        .news-item h2 a:hover {
+            text-decoration: underline;
+        }
+        .news-item p {
+            margin: 0;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        .news-item .date {
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 10px;
+        }
+        .bottom-price-section {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 15px;
+            background: #0f0f1a;
+            color: #00d4ff;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 8px;
+            border: 1px solid #333;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            gap: 10px;
+        }
+        .bottom-price-section span {
+            flex: 1 1 150px; /* Flexible width with minimum size */
+        }
+        @media (max-width: 600px) {
+            header h1 { font-size: 1.8em; }
+            .news-item h2 { font-size: 1em; }
+            .news-item p { font-size: 0.8em; }
+            .tabs a { padding: 8px 10px; font-size: 0.9em; }
+            .bottom-price-section { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Cardano News Hub</h1>
+    </header>
+    <div class="ticker" id="ticker">
+        <!-- Dynamic ADA-related news will be injected here -->
+    </div>
+    <div class="tabs">
+        <a href="https://app.dexhunter.io/trends" target="_blank">DexHunter</a>
+        <a href="https://www.snek.fun/" target="_blank">Snek.fun</a>
+        <a href="https://www.taptools.io/?period=24h" target="_blank">TapTools</a>
+        <a href="https://app.fluidtokens.com/ada/markets" target="_blank">FluidTokens</a>
+        <a href="https://www.jpg.store/" target="_blank">JPG Store</a>
+    </div>
+    <div class="price-feed" id="cardano-price-feed">
+        Loading Cardano Price...
+    </div>
+    <div class="live-banner">
+        Now live on Snek.fun!
+    </div>
+    <div class="news-container" id="news-container"></div>
+    <div class="bottom-price-section" id="bottom-price-section">
+        <span id="bitcoin-price">Bitcoin (BTC): Loading...</span>
+        <span id="ethereum-price">Ethereum (ETH): Loading...</span>
+        <span id="xrp-price">XRP: Loading...</span>
+        <span id="sui-price">Sui (SUI): Loading...</span>
+        <span id="snek-price">Snek (SNEK): Loading...</span>
+        <span id="iagon-price">Iagon (IAG): Loading...</span>
+        <span id="wmt-price">World Mobile Token (WMT): Loading...</span>
+    </div>
+
+    <script>
+        const parser = new RSSParser();
+        const tickerElement = document.getElementById('ticker');
+        const newsContainer = document.getElementById('news-container');
+        const cardanoPriceFeedElement = document.getElementById('cardano-price-feed');
+        const bitcoinPriceElement = document.getElementById('bitcoin-price');
+        const ethereumPriceElement = document.getElementById('ethereum-price');
+        const xrpPriceElement = document.getElementById('xrp-price');
+        const suiPriceElement = document.getElementById('sui-price');
+        const snekPriceElement = document.getElementById('snek-price');
+        const iagonPriceElement = document.getElementById('iagon-price');
+        const wmtPriceElement = document.getElementById('wmt-price');
+        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+        const rssFeeds = [
+            'https://cointelegraph.com/rss/tag/cardano',
+            'https://www.coindesk.com/arc/outboundfeeds/rss/?outputType=xml',
+            'https://cryptoslate.com/feed/',
+            'https://www.newsbtc.com/feed/'
+        ];
+
+        function formatDate(dateString) {
+            const options = {
+                weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+            };
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function isAdaRelated(news) {
+            return /Cardano|ADA/i.test(news.title) || /Cardano|ADA/i.test(news.summary);
+        }
+
+        async function fetchAndProcessNews() {
+            let combinedNews = [];
+            try {
+                for (const feedUrl of rssFeeds) {
+                    const feed = await parser.parseURL(proxyUrl + feedUrl);
+                    const rssItems = feed.items.map(item => ({
+                        title: item.title,
+                        summary: item.contentSnippet,
+                        link: item.link,
+                        pubDate: item.pubDate
+                    }));
+                    combinedNews = [...combinedNews, ...rssItems];
+                }
+
+                if (combinedNews.length === 0) {
+                    throw new Error("No news found in RSS feeds.");
+                }
+
+                const adaNews = combinedNews.filter(isAdaRelated);
+                // Ensure ticker shows all available ADA news up to 12, with separator
+                const tickerContent = adaNews.slice(0, 12).map(news => `<span class="ticker-item">${news.title}</span>`).join(' | ');
+                tickerElement.innerHTML = tickerContent;
+
+                const newsHtml = adaNews.slice(0, 12).map(news => `
+                    <div class="news-item">
+                        <h2><a href="${news.link}" target="_blank">${news.title}</a></h2>
+                        <p>${news.summary}</p>
+                        <div class="date">${formatDate(news.pubDate)}</div>
+                    </div>
+                `).join('');
+                newsContainer.innerHTML = newsHtml;
+
+                // Log for debugging
+                console.log('ADA News Items:', adaNews.length, adaNews.map(item => item.title));
+
+            } catch (error) {
+                console.error('Error fetching ADA news:', error);
+                tickerElement.textContent = "Error loading updates, check console.";
+            }
+        }
+
+        async function fetchCryptoPrices() {
+            try {
+                const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=cardano,bitcoin,ethereum,ripple,sui,snek,iagon,world-mobile-token&vs_currencies=usd');
+                const data = await response.json();
+                const adaPrice = data.cardano.usd;
+                const btcPrice = data.bitcoin.usd;
+                const ethPrice = data.ethereum.usd;
+                const xrpPrice = data.ripple.usd;
+                const suiPrice = data.sui.usd;
+                const snekPrice = data.snek.usd;
+                const iagPrice = data.iagon.usd;
+                const wmtPrice = data['world-mobile-token'].usd;
+
+                cardanoPriceFeedElement.innerHTML = `Cardano (ADA) Price: $${adaPrice}`;
+                bitcoinPriceElement.innerHTML = `Bitcoin (BTC): $${btcPrice}`;
+                ethereumPriceElement.innerHTML = `Ethereum (ETH): $${ethPrice}`;
+                xrpPriceElement.innerHTML = `XRP: $${xrpPrice}`;
+                suiPriceElement.innerHTML = `Sui (SUI): $${suiPrice}`;
+                snekPriceElement.innerHTML = `Snek (SNEK): $${snekPrice}`;
+                iagonPriceElement.innerHTML = `Iagon (IAG): $${iagPrice}`;
+                wmtPriceElement.innerHTML = `World Mobile Token (WMT): $${wmtPrice}`;
+            } catch (error) {
+                console.error('Error fetching crypto prices:', error);
+                cardanoPriceFeedElement.innerHTML = "Error loading ADA price.";
+                bitcoinPriceElement.innerHTML = "Bitcoin (BTC): Error";
+                ethereumPriceElement.innerHTML = "Ethereum (ETH): Error";
+                xrpPriceElement.innerHTML = "XRP: Error";
+                suiPriceElement.innerHTML = "Sui (SUI): Error";
+                snekPriceElement.innerHTML = "Snek (SNEK): Error";
+                iagonPriceElement.innerHTML = "Iagon (IAG): Error";
+                wmtPriceElement.innerHTML = "World Mobile Token (WMT): Error";
+            }
+        }
+
+        window.onload = async () => {
+            await fetchAndProcessNews();
+            await fetchCryptoPrices();
+        };
+        
+        setInterval(fetchAndProcessNews, 86400000); // Refresh news every 24 hours
+        setInterval(fetchCryptoPrices, 60000); // Refresh prices every minute
+    </script>
+</body>
+</html>
